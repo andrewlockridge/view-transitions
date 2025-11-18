@@ -79,6 +79,70 @@ export const allPlaylists = [
   ...sidebarPlaylists,
 ];
 
+// Helper functions for managing liked playlists in localStorage
+export function getLikedPlaylists(): Set<string> {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+  
+  try {
+    const stored = localStorage.getItem('likedPlaylists');
+    if (!stored) return new Set();
+    
+    const parsed = JSON.parse(stored);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch (error) {
+    console.error('Error reading liked playlists:', error);
+    return new Set();
+  }
+}
+
+export function isPlaylistLiked(playlistId: string): boolean {
+  const liked = getLikedPlaylists();
+  return liked.has(playlistId);
+}
+
+export function togglePlaylistLike(playlistId: string): boolean {
+  const liked = getLikedPlaylists();
+  
+  if (liked.has(playlistId)) {
+    liked.delete(playlistId);
+  } else {
+    liked.add(playlistId);
+  }
+  
+  try {
+    localStorage.setItem('likedPlaylists', JSON.stringify([...liked]));
+  } catch (error) {
+    console.error('Error saving liked playlists:', error);
+  }
+  
+  return liked.has(playlistId);
+}
+
+// Helper function to get sorted playlists based on likes
+export function getSortedPlaylists(playlistArray: Playlist[]): Playlist[] {
+  // If running on server (no window), return original array
+  if (typeof window === 'undefined') {
+    return playlistArray;
+  }
+  
+  const likedPlaylistIds = getLikedPlaylists();
+  
+  // Create a copy and sort it
+  return [...playlistArray].sort((a, b) => {
+    const aLiked = likedPlaylistIds.has(a.id);
+    const bLiked = likedPlaylistIds.has(b.id);
+    
+    // Liked playlists come first
+    if (aLiked && !bLiked) return -1;
+    if (!aLiked && bLiked) return 1;
+    
+    // Keep original order for items with same like status
+    return 0;
+  });
+}
+
 interface Song {
   id: string;
   title: string;
