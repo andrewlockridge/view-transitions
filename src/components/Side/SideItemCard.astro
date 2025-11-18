@@ -59,9 +59,11 @@ const { playlist } = Astro.props;
       
       // Set initial state based on localStorage
       if (isPlaylistLiked(playlistId)) {
+        button.classList.remove('opacity-0');
         heartIcon.classList.add('text-red-500');
         heartIcon.classList.remove('text-zinc-400');
       } else {
+        button.classList.add('opacity-0');
         heartIcon.classList.add('text-zinc-400');
         heartIcon.classList.remove('text-red-500');
       }
